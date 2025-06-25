@@ -1,0 +1,484 @@
+// Practical Example: Using the Image Recognition Type Definitions
+// This file demonstrates how to implement and use the interfaces we defined
+
+import {
+  ImageInput,
+  RecognitionResult,
+  ModelConfiguration,
+  ImageRecognitionService,
+  DetectedObject,
+  BoundingBox,
+  RecognitionRequest,
+  RecognitionResponse
+} from './image_recognition_types';
+
+// ============================================================================
+// EXAMPLE 1: CREATING IMAGE INPUT DATA
+// ============================================================================
+
+/**
+ * Example: Creating an image input object
+ * This shows how to structure image data for the recognition system
+ */
+function createImageInputExample(): ImageInput {
+  return {
+    id: 'img_001',
+    data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQ...', // Base64 encoded image
+    format: 'JPEG',
+    dimensions: {
+      width: 1920,
+      height: 1080
+    },
+    metadata: {
+      timestamp: new Date('2024-01-15T10:30:00Z'),
+      source: 'mobile_camera',
+      location: {
+        latitude: 37.7749,
+        longitude: -122.4194,
+        accuracy: 10
+      },
+      device: {
+        model: 'iPhone 15 Pro',
+        manufacturer: 'Apple',
+        os: 'iOS 17.2'
+      },
+      tags: ['outdoor', 'landscape', 'sunset']
+    }
+  };
+}
+
+// ============================================================================
+// EXAMPLE 2: CONFIGURING THE AI MODEL
+// ============================================================================
+
+/**
+ * Example: Creating different model configurations for different use cases
+ * This demonstrates how to tailor the recognition system for specific needs
+ */
+
+// High-accuracy configuration for critical applications
+function createHighAccuracyConfig(): ModelConfiguration {
+  return {
+    model: 'gpt-4-vision',
+    confidenceThreshold: 0.8, // High threshold for accuracy
+    maxDetections: 50,
+    enableFaceDetection: true,
+    enableOCR: true,
+    enableSceneClassification: true,
+    options: {
+      useGPU: true,
+      preprocessing: {
+        targetSize: { width: 1024, height: 1024 },
+        normalize: true,
+        colorSpace: 'RGB',
+        noiseReduction: true
+      },
+      postprocessing: {
+        applyNMS: true,
+        nmsThreshold: 0.5,
+        mergeOverlapping: true,
+        filterBySize: true,
+        minObjectSize: 0.01 // 1% of image size
+      }
+    }
+  };
+}
+
+// Fast configuration for real-time applications
+function createFastConfig(): ModelConfiguration {
+  return {
+    model: 'yolo-v8',
+    confidenceThreshold: 0.5, // Lower threshold for speed
+    maxDetections: 10,
+    enableFaceDetection: false,
+    enableOCR: false,
+    enableSceneClassification: false,
+    options: {
+      useGPU: true,
+      preprocessing: {
+        targetSize: { width: 640, height: 640 }, // Smaller for speed
+        normalize: true,
+        colorSpace: 'RGB',
+        noiseReduction: false
+      },
+      postprocessing: {
+        applyNMS: true,
+        nmsThreshold: 0.3,
+        mergeOverlapping: false,
+        filterBySize: false,
+        minObjectSize: 0.005
+      }
+    }
+  };
+}
+
+// ============================================================================
+// EXAMPLE 3: IMPLEMENTING THE RECOGNITION SERVICE
+// ============================================================================
+
+/**
+ * Example implementation of the ImageRecognitionService interface
+ * This shows how to create a concrete implementation
+ */
+class OpenAIImageRecognitionService implements ImageRecognitionService {
+  private currentConfig: ModelConfiguration;
+  private isInitialized: boolean = false;
+
+  constructor(initialConfig: ModelConfiguration) {
+    this.currentConfig = initialConfig;
+  }
+
+  async recognizeImage(image: ImageInput, config?: ModelConfiguration): Promise<RecognitionResult> {
+    const startTime = Date.now();
+    
+    // Use provided config or fall back to current config
+    const effectiveConfig = config || this.currentConfig;
+    
+    try {
+      // Simulate AI processing
+      const processingTime = await this.simulateProcessing(image, effectiveConfig);
+      
+      // Create mock recognition result
+      const result: RecognitionResult = {
+        id: `recognition_${Date.now()}`,
+        imageInput: image,
+        objects: this.generateMockObjects(),
+        text: this.generateMockText(),
+        faces: this.generateMockFaces(),
+        scene: {
+          primary: 'outdoor',
+          secondary: ['landscape', 'nature'],
+          confidence: 0.92
+        },
+        confidence: 0.85,
+        processingTime: processingTime,
+        timestamp: new Date()
+      };
+
+      return result;
+    } catch (error) {
+      throw new Error(`Recognition failed: ${error}`);
+    }
+  }
+
+  async recognizeBatch(images: ImageInput[], config?: ModelConfiguration): Promise<RecognitionResult[]> {
+    const results: RecognitionResult[] = [];
+    
+    // Process images in parallel for efficiency
+    const promises = images.map(image => this.recognizeImage(image, config));
+    return await Promise.all(promises);
+  }
+
+  async getStatus(): Promise<any> {
+    return {
+      isHealthy: true,
+      activeModel: this.currentConfig.model,
+      uptime: 3600, // 1 hour
+      memoryUsage: 512, // MB
+      gpuUsage: 75, // percentage
+      pendingRequests: 0,
+      averageProcessingTime: 1500 // ms
+    };
+  }
+
+  async updateConfiguration(config: ModelConfiguration): Promise<void> {
+    this.currentConfig = config;
+    console.log('Configuration updated:', config.model);
+  }
+
+  // Helper methods for simulation
+  private async simulateProcessing(image: ImageInput, config: ModelConfiguration): Promise<number> {
+    // Simulate different processing times based on model
+    const baseTime = config.model === 'gpt-4-vision' ? 2000 : 500;
+    const randomVariation = Math.random() * 500;
+    await new Promise(resolve => setTimeout(resolve, baseTime + randomVariation));
+    return baseTime + randomVariation;
+  }
+
+  private generateMockObjects(): DetectedObject[] {
+    return [
+      {
+        label: 'person',
+        confidence: 0.95,
+        boundingBox: { x: 0.1, y: 0.2, width: 0.3, height: 0.6 },
+        attributes: {
+          color: 'blue',
+          size: 'medium'
+        },
+        hierarchy: ['person', 'human', 'adult']
+      },
+      {
+        label: 'car',
+        confidence: 0.87,
+        boundingBox: { x: 0.5, y: 0.4, width: 0.4, height: 0.3 },
+        attributes: {
+          color: 'red',
+          brand: 'Toyota'
+        },
+        hierarchy: ['vehicle', 'car', 'sedan']
+      }
+    ];
+  }
+
+  private generateMockText(): any[] {
+    return [
+      {
+        text: 'STOP',
+        confidence: 0.98,
+        boundingBox: { x: 0.4, y: 0.1, width: 0.2, height: 0.1 },
+        language: 'en'
+      }
+    ];
+  }
+
+  private generateMockFaces(): any[] {
+    return [
+      {
+        boundingBox: { x: 0.15, y: 0.25, width: 0.2, height: 0.25 },
+        confidence: 0.92,
+        attributes: {
+          wearingGlasses: false,
+          hasBeard: true
+        }
+      }
+    ];
+  }
+}
+
+// ============================================================================
+// EXAMPLE 4: USING THE SERVICE
+// ============================================================================
+
+/**
+ * Example: How to use the recognition service in a real application
+ * This demonstrates the complete workflow from input to result
+ */
+async function demonstrateRecognitionWorkflow() {
+  console.log('=== Image Recognition Workflow Demo ===\n');
+
+  // 1. Create the service with configuration
+  const config = createHighAccuracyConfig();
+  const recognitionService = new OpenAIImageRecognitionService(config);
+
+  // 2. Create image input
+  const imageInput = createImageInputExample();
+  console.log('📸 Processing image:', imageInput.id);
+
+  // 3. Perform recognition
+  try {
+    const result = await recognitionService.recognizeImage(imageInput);
+    
+    console.log('✅ Recognition completed!');
+    console.log(`Processing time: ${result.processingTime}ms`);
+    console.log(`Overall confidence: ${(result.confidence * 100).toFixed(1)}%`);
+    
+    // 4. Display results
+    console.log('\n🔍 Detected Objects:');
+    result.objects.forEach((obj, index) => {
+      console.log(`  ${index + 1}. ${obj.label} (${(obj.confidence * 100).toFixed(1)}% confidence)`);
+      if (obj.attributes?.color) {
+        console.log(`     Color: ${obj.attributes.color}`);
+      }
+    });
+
+    if (result.text && result.text.length > 0) {
+      console.log('\n📝 Extracted Text:');
+      result.text.forEach((text, index) => {
+        console.log(`  ${index + 1}. "${text.text}" (${(text.confidence * 100).toFixed(1)}% confidence)`);
+      });
+    }
+
+    if (result.scene) {
+      console.log(`\n🏞️  Scene: ${result.scene.primary} (${(result.scene.confidence * 100).toFixed(1)}% confidence)`);
+    }
+
+  } catch (error) {
+    console.error('❌ Recognition failed:', error);
+  }
+}
+
+// ============================================================================
+// EXAMPLE 5: BATCH PROCESSING
+// ============================================================================
+
+/**
+ * Example: Processing multiple images efficiently
+ * This shows how to handle batch operations
+ */
+async function demonstrateBatchProcessing() {
+  console.log('\n=== Batch Processing Demo ===\n');
+
+  const service = new OpenAIImageRecognitionService(createFastConfig());
+  
+  // Create multiple image inputs
+  const images: ImageInput[] = [
+    {
+      id: 'batch_001',
+      data: 'data:image/jpeg;base64,...',
+      format: 'JPEG',
+      dimensions: { width: 800, height: 600 }
+    },
+    {
+      id: 'batch_002',
+      data: 'data:image/png;base64,...',
+      format: 'PNG',
+      dimensions: { width: 1024, height: 768 }
+    },
+    {
+      id: 'batch_003',
+      data: 'data:image/jpeg;base64,...',
+      format: 'JPEG',
+      dimensions: { width: 640, height: 480 }
+    }
+  ];
+
+  console.log(`🔄 Processing ${images.length} images in batch...`);
+  
+  const startTime = Date.now();
+  const results = await service.recognizeBatch(images);
+  const totalTime = Date.now() - startTime;
+
+  console.log(`✅ Batch processing completed in ${totalTime}ms`);
+  console.log(`Average time per image: ${(totalTime / images.length).toFixed(0)}ms`);
+
+  results.forEach((result, index) => {
+    console.log(`  Image ${index + 1}: ${result.objects.length} objects detected`);
+  });
+}
+
+// ============================================================================
+// EXAMPLE 6: ERROR HANDLING
+// ============================================================================
+
+/**
+ * Example: Proper error handling with the recognition system
+ * This demonstrates how to handle different types of errors
+ */
+async function demonstrateErrorHandling() {
+  console.log('\n=== Error Handling Demo ===\n');
+
+  const service = new OpenAIImageRecognitionService(createHighAccuracyConfig());
+
+  // Test with invalid image data
+  const invalidImage: ImageInput = {
+    id: 'invalid_001',
+    data: 'invalid_data',
+    format: 'JPEG',
+    dimensions: { width: 100, height: 100 }
+  };
+
+  try {
+    await service.recognizeImage(invalidImage);
+  } catch (error) {
+    console.log('❌ Expected error caught:', error.message);
+  }
+
+  // Test with oversized image
+  const oversizedImage: ImageInput = {
+    id: 'oversized_001',
+    data: 'data:image/jpeg;base64,...',
+    format: 'JPEG',
+    dimensions: { width: 10000, height: 10000 } // Very large
+  };
+
+  try {
+    await service.recognizeImage(oversizedImage);
+  } catch (error) {
+    console.log('❌ Oversized image error:', error.message);
+  }
+}
+
+// ============================================================================
+// EXAMPLE 7: API REQUEST/RESPONSE PATTERN
+// ============================================================================
+
+/**
+ * Example: Using the request/response wrapper interfaces
+ * This shows how to structure API calls
+ */
+function demonstrateAPIUsage() {
+  console.log('\n=== API Request/Response Demo ===\n');
+
+  // Create a request
+  const request: RecognitionRequest = {
+    requestId: 'req_12345',
+    image: createImageInputExample(),
+    configuration: {
+      confidenceThreshold: 0.7,
+      enableFaceDetection: true
+    },
+    metadata: {
+      clientId: 'mobile_app_v1',
+      userId: 'user_456',
+      priority: 'normal',
+      expectedResponseTime: 5
+    }
+  };
+
+  console.log('📤 API Request:', {
+    requestId: request.requestId,
+    imageId: request.image.id,
+    priority: request.metadata?.priority
+  });
+
+  // Simulate API response
+  const response: RecognitionResponse = {
+    requestId: request.requestId,
+    result: {
+      id: 'result_67890',
+      imageInput: request.image,
+      objects: [],
+      confidence: 0.85,
+      processingTime: 1200,
+      timestamp: new Date()
+    },
+    metadata: {
+      processingTime: 1200,
+      modelVersion: 'gpt-4-vision-1.0',
+      gpuUsed: true,
+      cacheStatus: 'miss'
+    }
+  };
+
+  console.log('📥 API Response:', {
+    requestId: response.requestId,
+    processingTime: response.metadata.processingTime,
+    modelVersion: response.metadata.modelVersion,
+    cacheStatus: response.metadata.cacheStatus
+  });
+}
+
+// ============================================================================
+// RUN ALL EXAMPLES
+// ============================================================================
+
+/**
+ * Main function to run all examples
+ * This demonstrates the complete system in action
+ */
+async function runAllExamples() {
+  console.log('🚀 Starting Image Recognition Type Definition Examples\n');
+  
+  await demonstrateRecognitionWorkflow();
+  await demonstrateBatchProcessing();
+  demonstrateErrorHandling();
+  demonstrateAPIUsage();
+  
+  console.log('\n✅ All examples completed successfully!');
+}
+
+// Export functions for use in other modules
+export {
+  createImageInputExample,
+  createHighAccuracyConfig,
+  createFastConfig,
+  OpenAIImageRecognitionService,
+  demonstrateRecognitionWorkflow,
+  demonstrateBatchProcessing,
+  demonstrateErrorHandling,
+  demonstrateAPIUsage,
+  runAllExamples
+};
+
+// Uncomment the line below to run examples when this file is executed directly
+// runAllExamples(); 
