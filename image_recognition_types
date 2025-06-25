@@ -1,0 +1,587 @@
+// AI-Powered Image Recognition System Type Definitions
+// This file demonstrates how to structure TypeScript interfaces for a complex AI system
+
+// ============================================================================
+// CORE IMAGE DATA INTERFACES
+// ============================================================================
+
+/**
+ * Represents the basic structure of an image input
+ * This interface defines the essential properties needed for image processing
+ */
+interface ImageInput {
+  /** Unique identifier for the image */
+  id: string;
+  /** Image data as base64 string, URL, or file path */
+  data: string;
+  /** Format of the image (JPEG, PNG, etc.) */
+  format: ImageFormat;
+  /** Image dimensions in pixels */
+  dimensions: ImageDimensions;
+  /** Optional metadata about the image */
+  metadata?: ImageMetadata;
+}
+
+/**
+ * Supported image formats for the recognition system
+ * Using a union type ensures type safety when specifying formats
+ */
+type ImageFormat = 'JPEG' | 'PNG' | 'WEBP' | 'BMP' | 'TIFF';
+
+/**
+ * Image dimensions with width and height
+ * This ensures we always have both dimensions for processing
+ */
+interface ImageDimensions {
+  width: number;
+  height: number;
+}
+
+/**
+ * Optional metadata that can be attached to images
+ * This allows for additional context without cluttering the main interface
+ */
+interface ImageMetadata {
+  /** When the image was captured or uploaded */
+  timestamp?: Date;
+  /** Source of the image (camera, upload, API, etc.) */
+  source?: string;
+  /** Geographic location where image was taken */
+  location?: GeoLocation;
+  /** Device information */
+  device?: DeviceInfo;
+  /** Custom tags or labels */
+  tags?: string[];
+}
+
+/**
+ * Geographic location data
+ * Useful for location-aware recognition features
+ */
+interface GeoLocation {
+  latitude: number;
+  longitude: number;
+  accuracy?: number; // in meters
+}
+
+/**
+ * Device information for context
+ */
+interface DeviceInfo {
+  model?: string;
+  manufacturer?: string;
+  os?: string;
+}
+
+// ============================================================================
+// RECOGNITION RESULT INTERFACES
+// ============================================================================
+
+/**
+ * Main result interface for image recognition
+ * Contains all the information returned by the AI model
+ */
+interface RecognitionResult {
+  /** Unique identifier for this recognition result */
+  id: string;
+  /** The original image input that was processed */
+  imageInput: ImageInput;
+  /** Detected objects in the image */
+  objects: DetectedObject[];
+  /** Text found in the image (OCR results) */
+  text?: ExtractedText[];
+  /** Faces detected in the image */
+  faces?: DetectedFace[];
+  /** Overall scene classification */
+  scene?: SceneClassification;
+  /** Confidence score for the entire recognition */
+  confidence: number;
+  /** Processing time in milliseconds */
+  processingTime: number;
+  /** When the recognition was performed */
+  timestamp: Date;
+}
+
+/**
+ * Represents a detected object in the image
+ * This is the core result of object detection
+ */
+interface DetectedObject {
+  /** Type or class of the detected object */
+  label: string;
+  /** Confidence score (0-1) for this detection */
+  confidence: number;
+  /** Bounding box coordinates */
+  boundingBox: BoundingBox;
+  /** Optional attributes of the object */
+  attributes?: ObjectAttributes;
+  /** Hierarchical classification (e.g., "animal" -> "mammal" -> "dog") */
+  hierarchy?: string[];
+}
+
+/**
+ * Bounding box coordinates for detected objects
+ * Uses relative coordinates (0-1) for flexibility across different image sizes
+ */
+interface BoundingBox {
+  /** Top-left X coordinate (0-1) */
+  x: number;
+  /** Top-left Y coordinate (0-1) */
+  y: number;
+  /** Width of the box (0-1) */
+  width: number;
+  /** Height of the box (0-1) */
+  height: number;
+}
+
+/**
+ * Additional attributes that can be detected for objects
+ * These provide more detailed information about detected objects
+ */
+interface ObjectAttributes {
+  /** Color of the object */
+  color?: string;
+  /** Size category (small, medium, large) */
+  size?: 'small' | 'medium' | 'large';
+  /** State or condition of the object */
+  state?: string;
+  /** Brand or manufacturer */
+  brand?: string;
+  /** Material composition */
+  material?: string;
+}
+
+/**
+ * Text extracted from the image using OCR
+ * Includes both the text content and its location
+ */
+interface ExtractedText {
+  /** The actual text content */
+  text: string;
+  /** Confidence score for the text extraction */
+  confidence: number;
+  /** Location of the text in the image */
+  boundingBox: BoundingBox;
+  /** Language of the detected text */
+  language?: string;
+  /** Font properties if detected */
+  font?: FontProperties;
+}
+
+/**
+ * Font properties for extracted text
+ */
+interface FontProperties {
+  /** Font family name */
+  family?: string;
+  /** Font size in pixels */
+  size?: number;
+  /** Whether the text is bold */
+  isBold?: boolean;
+  /** Whether the text is italic */
+  isItalic?: boolean;
+}
+
+/**
+ * Face detection results
+ * Includes facial features and attributes
+ */
+interface DetectedFace {
+  /** Bounding box of the face */
+  boundingBox: BoundingBox;
+  /** Confidence score for face detection */
+  confidence: number;
+  /** Facial landmarks (eyes, nose, mouth, etc.) */
+  landmarks?: FacialLandmarks;
+  /** Facial attributes */
+  attributes?: FacialAttributes;
+  /** Age estimation */
+  age?: AgeEstimate;
+  /** Gender classification */
+  gender?: GenderClassification;
+  /** Emotion detection */
+  emotions?: EmotionDetection[];
+}
+
+/**
+ * Facial landmark coordinates
+ * Key points on the face for detailed analysis
+ */
+interface FacialLandmarks {
+  /** Left eye coordinates */
+  leftEye: Point;
+  /** Right eye coordinates */
+  rightEye: Point;
+  /** Nose tip coordinates */
+  nose: Point;
+  /** Left mouth corner */
+  leftMouth: Point;
+  /** Right mouth corner */
+  rightMouth: Point;
+}
+
+/**
+ * Simple 2D point representation
+ */
+interface Point {
+  x: number;
+  y: number;
+}
+
+/**
+ * Facial attributes that can be detected
+ */
+interface FacialAttributes {
+  /** Whether the person is wearing glasses */
+  wearingGlasses?: boolean;
+  /** Whether the person is wearing a mask */
+  wearingMask?: boolean;
+  /** Hair color */
+  hairColor?: string;
+  /** Eye color */
+  eyeColor?: string;
+  /** Beard presence */
+  hasBeard?: boolean;
+}
+
+/**
+ * Age estimation with confidence range
+ */
+interface AgeEstimate {
+  /** Estimated age */
+  age: number;
+  /** Confidence range (e.g., 25-30 years) */
+  range: [number, number];
+  /** Confidence score for the estimation */
+  confidence: number;
+}
+
+/**
+ * Gender classification result
+ */
+interface GenderClassification {
+  /** Predicted gender */
+  gender: 'male' | 'female' | 'unknown';
+  /** Confidence score */
+  confidence: number;
+}
+
+/**
+ * Emotion detection with confidence scores
+ */
+interface EmotionDetection {
+  /** Type of emotion */
+  emotion: EmotionType;
+  /** Confidence score for this emotion */
+  confidence: number;
+}
+
+/**
+ * Supported emotion types
+ */
+type EmotionType = 
+  | 'happy' 
+  | 'sad' 
+  | 'angry' 
+  | 'surprised' 
+  | 'fearful' 
+  | 'disgusted' 
+  | 'neutral';
+
+/**
+ * Overall scene classification
+ * Provides context about the entire image
+ */
+interface SceneClassification {
+  /** Primary scene type */
+  primary: string;
+  /** Secondary scene types */
+  secondary?: string[];
+  /** Confidence score */
+  confidence: number;
+}
+
+// ============================================================================
+// MODEL CONFIGURATION INTERFACES
+// ============================================================================
+
+/**
+ * Configuration for the AI recognition model
+ * Controls how the model processes images
+ */
+interface ModelConfiguration {
+  /** Which AI model to use */
+  model: ModelType;
+  /** Minimum confidence threshold for detections */
+  confidenceThreshold: number;
+  /** Maximum number of objects to detect */
+  maxDetections?: number;
+  /** Whether to enable face detection */
+  enableFaceDetection: boolean;
+  /** Whether to enable OCR */
+  enableOCR: boolean;
+  /** Whether to enable scene classification */
+  enableSceneClassification: boolean;
+  /** Processing options */
+  options: ProcessingOptions;
+}
+
+/**
+ * Available model types
+ * Different models may be optimized for different tasks
+ */
+type ModelType = 
+  | 'gpt-4-vision' 
+  | 'claude-3-sonnet' 
+  | 'custom-vision' 
+  | 'yolo-v8' 
+  | 'efficientdet';
+
+/**
+ * Processing options for fine-tuning recognition
+ */
+interface ProcessingOptions {
+  /** Whether to use GPU acceleration */
+  useGPU: boolean;
+  /** Image preprocessing steps */
+  preprocessing: PreprocessingOptions;
+  /** Post-processing filters */
+  postprocessing: PostprocessingOptions;
+}
+
+/**
+ * Image preprocessing configuration
+ * Controls how images are prepared before recognition
+ */
+interface PreprocessingOptions {
+  /** Target image size for processing */
+  targetSize?: ImageDimensions;
+  /** Whether to normalize pixel values */
+  normalize: boolean;
+  /** Color space conversion */
+  colorSpace: 'RGB' | 'BGR' | 'GRAY';
+  /** Whether to apply noise reduction */
+  noiseReduction: boolean;
+}
+
+/**
+ * Post-processing configuration
+ * Controls how results are filtered and refined
+ */
+interface PostprocessingOptions {
+  /** Whether to apply non-maximum suppression */
+  applyNMS: boolean;
+  /** NMS threshold if enabled */
+  nmsThreshold: number;
+  /** Whether to merge overlapping detections */
+  mergeOverlapping: boolean;
+  /** Whether to filter by object size */
+  filterBySize: boolean;
+  /** Minimum object size (relative to image) */
+  minObjectSize: number;
+}
+
+// ============================================================================
+// SYSTEM COMPONENT INTERFACES
+// ============================================================================
+
+/**
+ * Main service interface for the image recognition system
+ * Defines the contract for the recognition service
+ */
+interface ImageRecognitionService {
+  /** Process a single image */
+  recognizeImage(image: ImageInput, config?: ModelConfiguration): Promise<RecognitionResult>;
+  
+  /** Process multiple images in batch */
+  recognizeBatch(images: ImageInput[], config?: ModelConfiguration): Promise<RecognitionResult[]>;
+  
+  /** Get system status and health */
+  getStatus(): Promise<SystemStatus>;
+  
+  /** Update model configuration */
+  updateConfiguration(config: ModelConfiguration): Promise<void>;
+}
+
+/**
+ * System status information
+ * Useful for monitoring and health checks
+ */
+interface SystemStatus {
+  /** Whether the system is operational */
+  isHealthy: boolean;
+  /** Current model being used */
+  activeModel: ModelType;
+  /** System uptime in seconds */
+  uptime: number;
+  /** Memory usage in MB */
+  memoryUsage: number;
+  /** GPU usage percentage if available */
+  gpuUsage?: number;
+  /** Number of pending requests */
+  pendingRequests: number;
+  /** Average processing time in milliseconds */
+  averageProcessingTime: number;
+}
+
+/**
+ * Error types that can occur during recognition
+ * Provides structured error handling
+ */
+interface RecognitionError {
+  /** Error code for programmatic handling */
+  code: ErrorCode;
+  /** Human-readable error message */
+  message: string;
+  /** Additional error details */
+  details?: Record<string, any>;
+  /** When the error occurred */
+  timestamp: Date;
+}
+
+/**
+ * Specific error codes for different failure scenarios
+ */
+type ErrorCode = 
+  | 'INVALID_IMAGE_FORMAT'
+  | 'IMAGE_TOO_LARGE'
+  | 'MODEL_NOT_AVAILABLE'
+  | 'PROCESSING_TIMEOUT'
+  | 'INSUFFICIENT_MEMORY'
+  | 'GPU_ERROR'
+  | 'NETWORK_ERROR'
+  | 'UNKNOWN_ERROR';
+
+/**
+ * Event types for the recognition system
+ * Enables event-driven architecture
+ */
+interface RecognitionEvent {
+  /** Type of event */
+  type: EventType;
+  /** Event data */
+  data: any;
+  /** When the event occurred */
+  timestamp: Date;
+}
+
+/**
+ * Supported event types
+ */
+type EventType = 
+  | 'RECOGNITION_STARTED'
+  | 'RECOGNITION_COMPLETED'
+  | 'RECOGNITION_FAILED'
+  | 'MODEL_LOADED'
+  | 'SYSTEM_ERROR';
+
+// ============================================================================
+// UTILITY INTERFACES
+// ============================================================================
+
+/**
+ * Request/Response wrapper for API calls
+ * Provides consistent structure for API communication
+ */
+interface RecognitionRequest {
+  /** Request ID for tracking */
+  requestId: string;
+  /** Image data to process */
+  image: ImageInput;
+  /** Optional configuration override */
+  configuration?: Partial<ModelConfiguration>;
+  /** Request metadata */
+  metadata?: RequestMetadata;
+}
+
+/**
+ * Response wrapper for API calls
+ */
+interface RecognitionResponse {
+  /** Request ID for correlation */
+  requestId: string;
+  /** Recognition results */
+  result: RecognitionResult;
+  /** Processing metadata */
+  metadata: ResponseMetadata;
+}
+
+/**
+ * Request metadata
+ */
+interface RequestMetadata {
+  /** Client application identifier */
+  clientId?: string;
+  /** User identifier */
+  userId?: string;
+  /** Request priority */
+  priority?: 'low' | 'normal' | 'high';
+  /** Expected response time in seconds */
+  expectedResponseTime?: number;
+}
+
+/**
+ * Response metadata
+ */
+interface ResponseMetadata {
+  /** Total processing time */
+  processingTime: number;
+  /** Model version used */
+  modelVersion: string;
+  /** Whether GPU was used */
+  gpuUsed: boolean;
+  /** Cache hit/miss information */
+  cacheStatus: 'hit' | 'miss' | 'disabled';
+}
+
+// ============================================================================
+// EXPORT ALL INTERFACES
+// ============================================================================
+
+export {
+  // Core interfaces
+  ImageInput,
+  ImageFormat,
+  ImageDimensions,
+  ImageMetadata,
+  GeoLocation,
+  DeviceInfo,
+  
+  // Recognition results
+  RecognitionResult,
+  DetectedObject,
+  BoundingBox,
+  ObjectAttributes,
+  ExtractedText,
+  FontProperties,
+  DetectedFace,
+  FacialLandmarks,
+  Point,
+  FacialAttributes,
+  AgeEstimate,
+  GenderClassification,
+  EmotionDetection,
+  EmotionType,
+  SceneClassification,
+  
+  // Model configuration
+  ModelConfiguration,
+  ModelType,
+  ProcessingOptions,
+  PreprocessingOptions,
+  PostprocessingOptions,
+  
+  // System components
+  ImageRecognitionService,
+  SystemStatus,
+  RecognitionError,
+  ErrorCode,
+  RecognitionEvent,
+  EventType,
+  
+  // Utility interfaces
+  RecognitionRequest,
+  RecognitionResponse,
+  RequestMetadata,
+  ResponseMetadata
+}; 
